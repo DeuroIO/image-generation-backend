@@ -4,8 +4,7 @@ import json
 from gan_io import process_a_image_using_gan
 
 converted_directory = "s3_files"
-if not os.path.exists(converted_directory):
-    os.makedirs(converted_directory)
+if not os.path.exists(converted_directory): os.makedirs(converted_directory)
 
 out_bucket = boto3.resource('s3').Bucket('deuro-image-uploads')
 finished_bucket = boto3.resource('s3').Bucket('deuro-image-finished-processing')
@@ -18,22 +17,18 @@ def download_from_s3(s3_file):
     """
     Download a file from the S3 output bucket to your hard drive.
     """
-    prefix = s3s3_file.split(".")[0]
-    destination_pathA = os.path.join(
-        converted_directory,
-        prefix,
-        'testA',
-        os.path.basename(s3_file)
-    )
-    destination_pathB = os.path.join(
-        converted_directory,
-        prefix,
-        'testB',
-        os.path.basename(s3_file)
-    )
+    prefix = s3_file.split(".")[0]
+    destination_path = os.path.join(converted_directory, prefix)
+    destination_pathA = "{}/testA".format(destination_path)
+    destination_pathB = "{}/testB".format(destination_path)
+    try:
+        os.makedirs(destination_pathA)
+        os.makedirs(destination_pathB)
+    except:
+        print()
     body = out_bucket.Object(s3_file).get()['Body']
-    with open(destination_pathA, 'wb') as destA:
-        with open(destination_pathB, 'wb') as destB:
+    with open("{}/{}".format(destination_pathA, os.path.basename(s3_file)), 'wb') as destA:
+        with open("{}/{}".format(destination_pathB, os.path.basename(s3_file)), 'wb') as destB:
             # Here we write the file in chunks to prevent
             # loading everything into memory at once.
             for chunk in iter(lambda: body.read(4096), b''):
@@ -70,7 +65,7 @@ def check_message():
         prefix = download_from_s3(key)
 
         #TODO: Process the file
-        process_a_image_using_gan(prefix, converted_directory)
+        process_a_image_using_gan(prefix)
 
         #TODO: Upload the finished file to S3
 

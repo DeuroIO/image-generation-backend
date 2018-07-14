@@ -16,7 +16,7 @@
                  loadSize: 700
                     model: one_direction_test
                  nThreads: 1
-                     name: style_cezanne_cpu_pretrained
+                     name: style_monet_cpu_pretrained
                      norm: instance
                 output_nc: 3
                     phase: test
