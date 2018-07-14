@@ -7,12 +7,8 @@ if not os.path.exists(converted_directory):
 
 out_bucket = boto3.resource('s3').Bucket('deuro-image-uploads')
 finished_bucket = boto3.resource('s3').Bucket('deuro-image-finished-processing')
-# Get the service resource
+
 sqs = boto3.client('sqs')
-
-# Get the queue
-queue = boto3.resource('sqs').get_queue_by_name(QueueName='deuro-image-queue', QueueOwnerAWSAccountId='232968121261')
-
 #QUEUE URL
 queue_url = "https://sqs.us-east-2.amazonaws.com/232968121261/deuro-image-queue"
 
@@ -42,27 +38,27 @@ def upload_to_s3(file):
 def check_message():
     print("Check message activate!")
     # Process messages by printing out body
-    for message in queue.receive_messages():
+    response = sqs.receive_message(QueueUrl=queue_url)
+    if 'Messages' not in response: return
+
+    messages = response['Messages']
+    receipt_handles = []
+
+    for index, msg in enumerate(messages):
+        receipt_handles.append({'Id': str(index), 'ReceiptHandle': msg['ReceiptHandle']})
+
         # Print out the body of the message
-        body = json.loads(message.body)
-        sub_message = json.loads(body['Message'])
-        print(body)
-        outputs = sub_message['Records']
-        if not len(outputs):
-            print("Saw no output in {0}".format(body))
-
-        key = outputs[0].get('s3').get('object').get('key')
-
-        if not key:
-            print("Saw no key in outputs in {0}".format(body))
+        sub_message = json.loads(json.loads(msg['Body'])['Message'])
+        first_record = sub_message['Records'][0]
+        key = first_record['s3']['object']['key']
 
         #Download file from S3
         download_from_s3(key)
 
         #TODO: Process the file
 
-
         #TODO: Upload the finished file to S3
 
-        # Let the queue know that the message is processed
-        sqs.delete_message(QueueUrl=queue_url, Entries=sub_message['ReceiptHandle'])
+    # Let the queue know that the message is processed
+    sqs.delete_message_batch(QueueUrl=queue_url, Entries=receipt_handles)
+    print('Received and deleted message: %s' % messages)
