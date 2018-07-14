@@ -1,15 +1,20 @@
 import boto3
 import os
 import json
-
 converted_directory = "s3_files"
+if not os.path.exists(converted_directory):
+    os.makedirs(converted_directory)
+
 out_bucket = boto3.resource('s3').Bucket('deuro-image-uploads')
 finished_bucket = boto3.resource('s3').Bucket('deuro-image-finished-processing')
 # Get the service resource
-sqs = boto3.resource('sqs')
+sqs = boto3.client('sqs')
 
 # Get the queue
-queue = sqs.get_queue_by_name(QueueName='deuro-image-queue', QueueOwnerAWSAccountId='232968121261')
+queue = boto3.resource('sqs').get_queue_by_name(QueueName='deuro-image-queue', QueueOwnerAWSAccountId='232968121261')
+
+#QUEUE URL
+queue_url = "https://sqs.us-east-2.amazonaws.com/232968121261/deuro-image-queue"
 
 def download_from_s3(s3_file):
     """
@@ -39,11 +44,10 @@ def check_message():
     # Process messages by printing out body
     for message in queue.receive_messages():
         # Print out the body of the message
-        body = message.body
+        body = json.loads(message.body)
+        sub_message = json.loads(body['Message'])
         print(body)
-        message = body.get('Message', '{}')
-        outputs = json.loads(message).get('Records', [])
-
+        outputs = sub_message['Records']
         if not len(outputs):
             print("Saw no output in {0}".format(body))
 
@@ -61,4 +65,4 @@ def check_message():
         #TODO: Upload the finished file to S3
 
         # Let the queue know that the message is processed
-        message.delete()
+        sqs.delete_message(QueueUrl=queue_url, Entries=sub_message['ReceiptHandle'])

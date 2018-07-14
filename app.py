@@ -12,7 +12,7 @@ def index():
 
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
-    job = scheduler.add_job(check_message, 'interval', minutes=1)
+    job = scheduler.add_job(check_message, 'interval', seconds=5)
     scheduler.start()
 
     host = os.environ.get('IP', '0.0.0.0')
