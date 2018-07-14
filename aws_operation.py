@@ -1,6 +1,8 @@
 import boto3
 import os
 import json
+from gan_io import process_a_image_using_gan
+
 converted_directory = "s3_files"
 if not os.path.exists(converted_directory):
     os.makedirs(converted_directory)
@@ -16,18 +18,30 @@ def download_from_s3(s3_file):
     """
     Download a file from the S3 output bucket to your hard drive.
     """
-    destination_path = os.path.join(
+    prefix = s3s3_file.split(".")[0]
+    destination_pathA = os.path.join(
         converted_directory,
+        prefix,
+        'testA',
+        os.path.basename(s3_file)
+    )
+    destination_pathB = os.path.join(
+        converted_directory,
+        prefix,
+        'testB',
         os.path.basename(s3_file)
     )
     body = out_bucket.Object(s3_file).get()['Body']
-    with open(destination_path, 'wb') as dest:
-        # Here we write the file in chunks to prevent
-        # loading everything into memory at once.
-        for chunk in iter(lambda: body.read(4096), b''):
-            dest.write(chunk)
+    with open(destination_pathA, 'wb') as destA:
+        with open(destination_pathB, 'wb') as destB:
+            # Here we write the file in chunks to prevent
+            # loading everything into memory at once.
+            for chunk in iter(lambda: body.read(4096), b''):
+                destA.write(chunk)
+                destB.write(chunk)
 
     print("Downloaded {0}".format(destination_path))
+    return prefix
 
 def upload_to_s3(file):
     # Upload a new file
@@ -53,9 +67,10 @@ def check_message():
         key = first_record['s3']['object']['key']
 
         #Download file from S3
-        download_from_s3(key)
+        prefix = download_from_s3(key)
 
         #TODO: Process the file
+        process_a_image_using_gan(prefix, converted_directory)
 
         #TODO: Upload the finished file to S3
 
