@@ -10,5 +10,5 @@ def process_a_image_using_gan(prefix):
         COMMAND = "cd CycleGAN && DATA_ROOT=../s3_files/{} name={} model=one_direction_test phase=test loadSize=600 fineSize=600 gpu=0 cudnn=0 resize_or_crop=\"scale_width\" th test.lua && cd ..".format(prefix, model)
         print(COMMAND)
         os.system(COMMAND)
-        results[model] = "CycleGAN/results/{}/latest_test/images/fake_B/{}.JPG".format(model, prefix)
+        results[model] = "CycleGAN/results/{}/latest_test/images/fake_B/{}".format(model, prefix)
     return results
