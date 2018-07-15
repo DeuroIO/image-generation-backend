@@ -54,7 +54,7 @@ def upload_to_s3(prefix, processed_images):
 
     # Upload the whole folder
     os.system("aws s3 cp -r {} s3://{}/".format(target_path, finished_bucket))
-    print("Uploaded {}".format(file))
+    print("Uploaded {}".format(target_path))
 
 def check_message():
     print("Check message activate!")
