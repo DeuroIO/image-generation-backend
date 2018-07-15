@@ -51,7 +51,7 @@ def upload_to_s3(prefix, processed_images):
         for file in files:
             full_path = os.path.join(subdir, file)
             with open(full_path, 'rb') as data:
-                finished_bucket.put_object(Key=full_path[len(path)+1:], Body=data)
+                finished_bucket.put_object(Key=full_path[len(target_path)+1:], Body=data)
     print("Uploaded {}".format(file))
 
 def check_message():
