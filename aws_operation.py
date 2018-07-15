@@ -2,6 +2,7 @@ import boto3
 import os
 import json
 from gan_io import process_a_image_using_gan
+from shutil import copyfile
 
 converted_directory = "s3_files"
 if not os.path.exists(converted_directory): os.makedirs(converted_directory)
@@ -38,10 +39,19 @@ def download_from_s3(s3_file):
     print("Downloaded {0}".format(destination_path))
     return prefix
 
-def upload_to_s3(file):
-    # Upload a new file
-    data = open(os.path.join(converted_directory,file), 'rb')
-    finished_bucket.put_object(Key=file, Body=data)
+def upload_to_s3(prefix, processed_images):
+    #Copy the processed data over
+    target_path = "{}/{}".format(converted_directory, prefix)
+    for model in processed_images:
+        img = processed_images[model]
+        copyfile(img, "{}/{}_{}.JPG".format(target_path, prefix, model))
+
+    # Upload the whole folder
+    for subdir, dirs, files in os.walk(target_path):
+        for file in files:
+            full_path = os.path.join(subdir, file)
+            with open(full_path, 'rb') as data:
+                finished_bucket.put_object(Key=full_path[len(path)+1:], Body=data)
     print("Uploaded {}".format(file))
 
 def check_message():
@@ -65,9 +75,10 @@ def check_message():
         prefix = download_from_s3(key)
 
         #TODO: Process the file
-        process_a_image_using_gan(prefix)
+        processed_images = process_a_image_using_gan(prefix)
 
         #TODO: Upload the finished file to S3
+        upload_to_s3(processed_images)
 
     # Let the queue know that the message is processed
     sqs.delete_message_batch(QueueUrl=queue_url, Entries=receipt_handles)
