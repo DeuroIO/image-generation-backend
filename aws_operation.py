@@ -8,7 +8,7 @@ converted_directory = "s3_files"
 if not os.path.exists(converted_directory): os.makedirs(converted_directory)
 
 out_bucket = boto3.resource('s3').Bucket('deuro-image-uploads')
-finished_bucket = boto3.resource('s3').Bucket('deuro-image-finished-processing')
+finished_bucket = 'deuro-image-finished-processing'
 
 sqs = boto3.client('sqs')
 #QUEUE URL
@@ -44,14 +44,12 @@ def upload_to_s3(prefix, processed_images):
     target_path = "{}/{}".format(converted_directory, prefix)
     for model in processed_images:
         img = processed_images[model]
-        copyfile(img, "{}/{}_{}.JPG".format(target_path, prefix, model))
+        suffix = img.split(".")[-1]
+        img_file = "{}/{}_{}.{}".format(target_path, prefix, model, suffix)
+        copyfile(img, img_file)
 
     # Upload the whole folder
-    for subdir, dirs, files in os.walk(target_path):
-        for file in files:
-            full_path = os.path.join(subdir, file)
-            with open(full_path, 'rb') as data:
-                finished_bucket.put_object(Key=full_path[len(target_path)+1:], Body=data)
+    os.system("aws s3 cp -r {} s3://{}/".format(target_path, finished_bucket))
     print("Uploaded {}".format(file))
 
 def check_message():
