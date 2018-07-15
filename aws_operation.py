@@ -78,7 +78,7 @@ def check_message():
         processed_images = process_a_image_using_gan(prefix)
 
         #TODO: Upload the finished file to S3
-        upload_to_s3(processed_images)
+        upload_to_s3(prefix, processed_images)
 
     # Let the queue know that the message is processed
     sqs.delete_message_batch(QueueUrl=queue_url, Entries=receipt_handles)
