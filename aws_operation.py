@@ -20,7 +20,6 @@ def download_from_s3(s3_file):
     """
     splits = s3_file.split(".")
     prefix = splits[0]
-    suffix = splits[-1]
     destination_path = os.path.join(converted_directory, prefix)
     destination_pathA = "{}/testA".format(destination_path)
     destination_pathB = "{}/testB".format(destination_path)
@@ -39,15 +38,19 @@ def download_from_s3(s3_file):
                 destB.write(chunk)
 
     print("Downloaded {0}".format(destination_path))
-    return (prefix, suffix)
+    return prefix
 
-def upload_to_s3(prefix, processed_images, suffix):
+def upload_to_s3(prefix, processed_images):
     #Copy the processed data over
     target_path = "{}/{}".format(converted_directory, prefix)
     for model in processed_images:
         img = processed_images[model]
+        suffix = ".jpg"
+        img_path = "{}.{}".format(img, suffix)
+        if not os.path.isfile(img_path): suffix = ".png"
+        img_path = "{}.{}".format(img, suffix)
         img_file = "{}/{}_{}.{}".format(target_path, prefix, model, suffix)
-        copyfile("{}.{}".format(img, suffix), img_file)
+        copyfile(img_path, img_file)
 
     # Upload the whole folder
     os.system("aws s3 cp -r {} s3://{}/".format(target_path, finished_bucket))
@@ -71,13 +74,13 @@ def check_message():
         key = first_record['s3']['object']['key']
 
         #Download file from S3
-        prefix,suffix = download_from_s3(key)
+        prefix = download_from_s3(key)
 
         #TODO: Process the file
         processed_images = process_a_image_using_gan(prefix)
 
         #TODO: Upload the finished file to S3
-        upload_to_s3(prefix, processed_images, suffix)
+        upload_to_s3(prefix, processed_images)
 
     # Let the queue know that the message is processed
     sqs.delete_message_batch(QueueUrl=queue_url, Entries=receipt_handles)
