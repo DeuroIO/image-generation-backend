@@ -45,9 +45,9 @@ def upload_to_s3(prefix, processed_images):
     target_path = "{}/{}".format(converted_directory, prefix)
     for model in processed_images:
         img = processed_images[model]
-        suffix = ".jpg"
+        suffix = "jpg"
         img_path = "{}.{}".format(img, suffix)
-        if not os.path.isfile(img_path): suffix = ".png"
+        if not os.path.isfile(img_path): suffix = "png"
         img_path = "{}.{}".format(img, suffix)
         img_file = "{}/{}_{}.{}".format(target_path, prefix, model, suffix)
         copyfile(img_path, img_file)
