@@ -1,4 +1,4 @@
-                DATA_ROOT: ../s3_files/IMG_2371
+                DATA_ROOT: ../s3_files/gray1
                align_data: 0
              aspect_ratio: 1
                 batchSize: 1
@@ -8,12 +8,12 @@
                     cudnn: 0
                   display: 1
                display_id: 200
-                 fineSize: 700
+                 fineSize: 500
                      flip: 0
                       gpu: 0
                  how_many: all
                  input_nc: 3
-                 loadSize: 700
+                 loadSize: 500
                     model: one_direction_test
                  nThreads: 1
                      name: style_cezanne_cpu_pretrained
